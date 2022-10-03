@@ -1,5 +1,6 @@
 import mysql from 'mysql2';
 import dotenv from 'dotenv';
+import { createContext } from 'vm';
 dotenv.config()
 
 const pool = mysql.createPool({
@@ -10,10 +11,24 @@ const pool = mysql.createPool({
 }).promise();
 
 
-async function getNotes() {
+export async function getNotes() {
     const [ rows ] = await pool.query("SELECT * FROM notes");
     return rows;
 }
 
-const notes = await getNotes()
-console.log(notes)
+export async function getNote(id) {
+    const [ rows ] = await pool.query(`SELECT * FROM notes WHERE id = ?`, [id]);
+    return rows[0];
+}
+
+export async function createNote(title, contents) {
+    const [result] = await pool.query(`
+    INSERT INTO notes (title, contents)
+    VALUE(?, ?)
+    `, [title, contents])
+    return{
+         id: result.insertId,
+         title,
+         contents
+        };
+}
